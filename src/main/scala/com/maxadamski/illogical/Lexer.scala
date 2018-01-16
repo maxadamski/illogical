@@ -2,7 +2,7 @@ package com.maxadamski.illogical
 
 object Lexer {
   val seps = raw"[\{\}\[\]\(\)\,\ ]"
-  val ops = raw"[A-Z\!\&\|\<\>\-]"
+  val ops = raw"[A-Z\!\&\|\<\>\-\~]"
 
   def mergeTokens(symbol: Symbol)(list: List[Token], t: Token) = (list, t) match {
     case (head :+ Token(`symbol`, a), Token(`symbol`, b)) => 

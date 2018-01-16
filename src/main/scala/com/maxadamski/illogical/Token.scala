@@ -6,6 +6,8 @@ case class Token(symbol: Symbol, value: String) {
   val notMatcher = raw"NOT|\~|\-|\!"
   val andMatcher = raw"AND|\&\&?"
   val orMatcher  = raw"OR|\|\|?"
+  val existsMatcher = raw"E(X|XIST|XISTS)?"
+  val forallMatcher = raw"(F|FOR)?A(LL)?"
 
   def isSep = symbol == 'sep
   def isOp  = symbol == 'op
@@ -15,8 +17,8 @@ case class Token(symbol: Symbol, value: String) {
   def isRightBrace = isSep && matches(raw"[\)\]\}]")
   def isArgSep     = isSep && matches(raw"\,")
 
-  def isEXISTS = isOp && matches(raw"E(X|XIST|XISTS)?")
-  def isFORALL = isOp && matches(raw"(F|FOR)?A(LL)?")
+  def isEXISTS = isOp && matches(existsMatcher)
+  def isFORALL = isOp && matches(forallMatcher)
   def isNOT    = isOp && matches(notMatcher)
   def isAND    = isOp && matches(andMatcher)
   def isOR     = isOp && matches(orMatcher)
@@ -26,10 +28,13 @@ case class Token(symbol: Symbol, value: String) {
   def isNOR    = isOp && matches(s"(N|${notMatcher})(${orMatcher})")
   def isXOR    = isOp && matches(s"X(${orMatcher})")
 
-  def isCon  = isId && matches(raw"c.[a-z]+|[abc]")
-  val isVar  = isId && matches(raw"v.[a-z]+|[xyz]")
-  val isFunc = isId && matches(raw"f.[a-z]+|[fgh]")
-  val isPred = isId && matches(raw"p.[a-z]+|[pqr]")
+  def isCon  = isId && matches(raw"(c\.|\#)[a-z]+|[abc]")
+  val isVar  = isId && matches(raw"(v\.|\$$)[a-z]+|[uvwxyz]")
+  val isFunc = isId && matches(raw"(f\.|\@)[a-z]+|[fgh]")
+  val isPred = isId && matches(raw"(p\.|\?)[a-z]+|[pqr]")
+
+  def isNOTEXISTS: Boolean = isOp && matches(s"(${notMatcher})(${existsMatcher})")
+  def isNOTFORALL: Boolean = isOp && matches(s"(${notMatcher})(${forallMatcher})")
 
   def opToken: Option[OpToken] = 
     if (isAND) Some(AND)

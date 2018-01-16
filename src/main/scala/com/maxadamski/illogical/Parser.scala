@@ -4,34 +4,25 @@ object Parser {
 
   // Convenience initializers
 
-  val makeFunc: (String, List[Term]) => Option[Func] = {
-    case (name, args) if !args.isEmpty => Some(Func(name, args))
-    case _ => None
-  }
+  def makeFunc(name: String, args: List[Term]): Option[Func] = 
+    if (!args.isEmpty) Some(Func(name, args)) else None
 
-  val makePred: (String, List[Term]) => Option[Pred] = {
-    case (name, args) if !args.isEmpty => Some(Pred(name, args))
-    case _ => None
-  }
+  def makePred(name: String, args: List[Term]): Option[Pred] = 
+    if (!args.isEmpty) Some(Pred(name, args)) else None
 
-  val makeQu: (Option[QuToken], Option[Var], Option[Form]) => Option[Qu] = {
-    case (Some(t), Some(v), Some(p)) => Some(Qu(t, v, p))
-    case _ => None
-  }
+  def makeQu(t: Option[QuToken], v: Option[Var], p: Option[Form]): Option[Qu] =
+    for { t <- t; v <- v; p <- p } yield Qu(t, v, p)
 
-  val makeOp: (Option[Form], Option[OpToken], Option[Form]) => Option[Op] = {
-    case (Some(p), Some(t), Some(q)) => Some(Op(p, t, q))
-    case _ => None
-  }
+  def makeOp(p: Option[Form], t: Option[OpToken], q: Option[Form]): Option[Op] =
+    for { p <- p; t <- t; q <- q } yield Op(p, t, q)
 
-  val makeNot: Option[Form] => Option[Not] = {
-    case (Some(p)) => Some(Not(p))
-    case _ => None
-  }
+  def makeNot(p: Option[Form]): Option[Not] =
+    for { p <- p } yield Not(p)
 
   // Node parsers
 
-  def isBalanced(ts: List[Token]) = ts.count(_.isLeftBrace) == ts.count(_.isRightBrace)
+  def isBalanced(ts: List[Token]) = 
+    ts.count(_.isLeftBrace) == ts.count(_.isRightBrace)
 
   def unbraced(ts: List[Token]): Option[List[Token]] = ts match {
     case lbrace +: tokens :+ rbrace if lbrace.isLeftBrace && rbrace.isRightBrace && isBalanced(tokens) => 
@@ -51,11 +42,11 @@ object Parser {
   def getForm(ts: List[Token]): Option[Form] = unbraced(ts) match {
     case Some(x) =>
       //println("unbracing form")
-      getOp(ts) orElse getQu(ts) orElse getNot(ts) orElse getPred(ts) orElse getForm(x)
+      getOp(ts) orElse getNot(ts) orElse getQu(ts) orElse getPred(ts) orElse getForm(x)
     case None =>
       //println("get form")
       //println(Lexer.repr(ts))
-      getOp(ts) orElse getQu(ts) orElse getNot(ts) orElse getPred(ts)
+      getOp(ts) orElse getNot(ts) orElse getQu(ts) orElse getPred(ts)
   }
 
   // Term parsers
@@ -95,7 +86,12 @@ object Parser {
       makeNot(getForm(tokens))
     case head :: tail if head.isNOT => 
       //println("get not")
-      makeNot(getQu(tail) orElse getPred(tail))
+      makeNot(getForm(tail))
+    // UGLY HACK: negation and quantifier operator is lexed as one token
+    case head :: tail if head.isNOTEXISTS => 
+      makeNot(getQu(Token('op, "E") +: tail))
+    case head :: tail if head.isNOTFORALL => 
+      makeNot(getQu(Token('op, "A") +: tail))
     case _ =>
       //println("could not get not")
       None

@@ -4,11 +4,8 @@ import org.scalatest._
 
 class ParserSpec extends UnitSpec {
   describe("Parser") {
-    describe("given invalid form") {
 
-    }
-
-    describe("given valid form with implicit terms") {
+    describe("given valid form") {
 
 
       describe("given atom") {
@@ -75,7 +72,13 @@ class ParserSpec extends UnitSpec {
 
           shouldParse("Ax !Ay p(x, y)", Qu(FORALL, x, Not(Qu(FORALL, y, Pred("p", List(x, y))))))
 
+          shouldParse("Ax (!Ay p(x, y))", Qu(FORALL, x, Not(Qu(FORALL, y, Pred("p", List(x, y))))))
+
+          shouldParse("Ax !(Ay p(x, y))", Qu(FORALL, x, Not(Qu(FORALL, y, Pred("p", List(x, y))))))
+
           shouldParse("!Ax Ay p(x, y)", Not(Qu(FORALL, x, Qu(FORALL, y, Pred("p", List(x, y))))))
+
+          shouldParse("!(Ax Ay p(x, y))", Not(Qu(FORALL, x, Qu(FORALL, y, Pred("p", List(x, y))))))
 
           shouldParse("Ax !p(x, y)", Qu(FORALL, x, Not(Pred("p", List(x, y)))))
       }

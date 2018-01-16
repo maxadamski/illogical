@@ -6,6 +6,7 @@ object Main {
   def printForm(x: String): Unit = Parser.parse(x) match {
     case Some(form) => 
       printForm(form)
+      printForm(form.cnf)
     case None => 
       println("invalid form!")
   }

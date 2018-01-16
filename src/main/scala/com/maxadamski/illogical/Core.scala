@@ -171,6 +171,28 @@ sealed abstract class Form extends Node with LogicOps {
     suffix.wrappedInQuantifiers(quantifiers)
   }
 
+  def cnf: Form = this.prefixForm match {
+    // a | (b & c) === (a | b) & (a | c)
+    case Op(p, OR, Op(q, AND, r)) => 
+      Op(Op(p.cnf, OR, q.cnf), AND, Op(p.cnf, OR, r.cnf))
+    case Op(Op(q, AND, r), OR, p) =>
+      Op(Op(p.cnf, OR, q.cnf), AND, Op(p.cnf, OR, r.cnf))
+    // !(a & b) === !a | !b
+
+    case Qu(token, v, p) =>
+      Qu(token, v, p.cnf)
+    case Pred(_, _) => 
+      this
+    case Not(p) =>
+      Not(p.cnf)
+    case Op(p: Pred, OR, q: Pred) => 
+      this
+    case Op(p, OR, q) => 
+      Op(p.cnf, OR, q.cnf)
+    case _ =>
+      this
+  }
+
   def wrappedInQuantifiers(qs: List[PartialQu]): Form = qs match {
     case x :: _ => 
       qs.last.complete(this).wrappedInQuantifiers(qs.dropRight(1))
