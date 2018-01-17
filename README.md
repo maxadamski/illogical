@@ -13,8 +13,8 @@ Proste w użyciu narzędzia logiki pierwszego rzędu
 	- [x] Przemianowanie zmiennych
 - [x] Skolemizacja
 	- [x] Wprowadzenie funkcji Skolema
-- [ ] Uzgadnianie
-	- [ ] Most general unifier (MGU)
+- [x] Uzgadnianie
+	- [x] Most general unifier (MGU)
 - [ ] Metoda tablic semantycznych (MTS)
 	- [ ] Spełnialność
 	- [ ] Prawdziwość

@@ -84,6 +84,9 @@ case class Sub(v: Var, t: Term) {
 
   def sub(s: Set[Sub]) =
     (for { sub <- s.find(_.v == v) } yield Sub(v, sub.t)) getOrElse this
+
+  def isFinal(s: Set[Sub]) = 
+    !s.exists(sub => t.contains(sub.v))
 }
 
 ////////////////////////////////////////////////
@@ -169,7 +172,7 @@ sealed abstract class Term extends Node {
   }
 
   def contains(v: Var): Boolean = this match {
-    case Func(name, args) => args.contains(contains(v))
+    case Func(name, args) => args.exists { arg => arg.contains(v) }
     case Var(name) => v.name == name
     case _ => false
   }
@@ -195,14 +198,6 @@ sealed abstract class Form extends Node with LogicOps {
     case _ => false
   }
 
-  def simplifyingBinaryOperator: Option[Form] = this match {
-      case Op(_, NAND,_) => expand_nand(this)
-      case Op(_, NOR, _) => expand_nor(this)
-      case Op(_, XOR, _) => expand_xor(this)
-      case Op(_, IMP, _) => expand_imp(this)
-      case Op(_, EQV, _) => expand_eqv(this)
-      case _ => None
-  }
 
   def pnf: Form = {
     var (suffix, quantifiers) = simplifyingOperators.simplifyingNegation.extractingQuantifiers
@@ -213,7 +208,7 @@ sealed abstract class Form extends Node with LogicOps {
     var (suffix, quantifiers) = simplifyingOperators.simplifyingNegation.extractingQuantifiers
     var skolemsub = skolemSubstitution(quantifiers)
     quantifiers = quantifiers.filter(_.universal)
-    suffix.cnf.simplifyingOperators.simplifyingNegation.sub(skolemsub).wrappedInQuantifiers(quantifiers)
+    suffix.cnf.sub(skolemsub).wrappedInQuantifiers(quantifiers)
   }
 
   def cnf: Form = this match {
@@ -303,7 +298,15 @@ sealed abstract class Form extends Node with LogicOps {
       (this, vars, qs)
   }
 
-  // expresses Form in terms of AND, OR and NOT
+  def simplifyingBinaryOperator: Option[Form] = this match {
+      case Op(_, NAND,_) => expand_nand(this)
+      case Op(_, NOR, _) => expand_nor(this)
+      case Op(_, XOR, _) => expand_xor(this)
+      case Op(_, IMP, _) => expand_imp(this)
+      case Op(_, EQV, _) => expand_eqv(this)
+      case _ => None
+  }
+
   def simplifyingOperators: Form = this match {
     case Op(_, NAND | NOR | XOR | IMP | EQV, _) =>
       // TODO: do something about the force unwrapping
@@ -349,112 +352,5 @@ sealed abstract class Form extends Node with LogicOps {
     case Pred(_, _) =>
       this
   }
-}
-
-object Unifier {
-  def mgu(p: Form, q: Form): Option[Set[Sub]] = (p, q) match {
-    case (p: Pred, q: Pred) => mgu(p, q)
-    case _ => None
-  }
-
-  def mgu(p: Pred, q: Pred): Option[Set[Sub]] = {
-    if (p.name != q.name) None else mgu(p.arguments, q.arguments)
-  }
-
-  def mgu(p: List[Term], q: List[Term]): Option[Set[Sub]] = {
-    if (p.length != q.length) return None
-    Some(Set())
-  }
-
-//  def sub(g: Set[Sub], s: Sub): Set[Sub] =
-//    g.map(_.sub(Set(s)))
-//
-//
-//    (p zip q).foreach {
-//      // delete
-//      case (u: Var, v: Var) if u == v => 
-//        G -= 
-//        G = G
-//      // decompose
-//      case (f: Func, g: Func) if f.name == g.name => 
-//        G += (f.arguments zip g.arguments).toSet
-//      // conflict
-//      case (f: Func, g: Func) if f.name != g.name => 
-//        return None
-//      // swap
-//      case (c: Con, v: Var) => 
-//        G += Sub(v, c)
-//      // eliminate
-//      case (v: Var, t: Term) if !t.containsVar(v) && G.contains(_.v == v) => 
-//        G = sub(G, Sub(v, t)) + Sub(v, t)
-//
-//
-//   // g = g diff g.filter(==)
-//   // g = g flatMap {
-//   //   case (Func(f, fa), Func(g, ga)) if f == g => fa zip ga
-//   // }
-//   // if (g filter {
-//   //   case (Func(f, fa), Func(g, ga)) if f != g => true
-//   // }) return None
-//   //
-//   //
-//
-//   var g = (p zip q).toSet
-//   var h = Set[(Term, Term)]()
-//   g.foreach { 
-//    case (x: Var, y: Var) if x == y => 
-//      h = h
-//    case (t: Term, v: Var) =>
-//      h = h + ((v, t))
-//    case (Func(f, fs), Func(h, hs)) if f != h => 
-//      return None
-//    case (x: Var, Func(f, fs)) if fs.contains(x) => 
-//      None
-//
-//
-//   }
-//
-//
-//   
-//   Some(h.flatten)
-//  }
-//
-//  case class Eq(p: Term, q: Term) {
-//
-//  }
-//
-//
-//  def unify(p: Term, q: Term, g: Set[(Term, Term)]): Option[Set[(Term, Term)]] = (p, q) match {
-//    case (Var(x), Var(y)) if x == y => 
-//      Some(g)
-//
-//    case (Func(f, fs), Func(h, hs)) if f == h => 
-//      val unified = (fs zip hs).map { case (p, q) => unify(p, q, g) }
-//      if (!unified.contains(None)) 
-//        Some(g ++ unified.flatten.flatten) 
-//      else 
-//        None
-//
-//    case (Func(f, fs), Func(h, hs)) if f != h => 
-//      None
-//
-//    case (t: Term, v: Var) =>
-//      val unified = unify(v, t, Set())
-//      if (unified != None) 
-//        Some(g ++ unified.get)
-//      else
-//        None
-//
-//    case (x: Var, t: Term) if !t.contains(x) => 
-//      val newg = g
-//      val unified = unify(x, t, Set())
-//      if (unified != None) 
-//        Some(newg ++ unified.get)
-//      else
-//        None
-//
-//    case (x: Var, Func(f, fs)) if fs.contains(x) => 
-//      None
-//  }
 }
 
