@@ -1,4 +1,4 @@
-# Illogical
+# Illogical (WIP)
 
 Proste w użyciu narzędzia logiki pierwszego rzędu
 
@@ -23,6 +23,8 @@ Proste w użyciu narzędzia logiki pierwszego rzędu
 - [ ] Rezolucja
 	- [ ] Spełnialność
 	- [ ] Prawdziwość
+- [ ] Interfejs wiersza poleceń
+- [ ] Webowy interfejs
 
 ## Grammar
 
