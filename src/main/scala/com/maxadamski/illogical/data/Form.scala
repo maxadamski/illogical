@@ -1,203 +1,46 @@
 package com.maxadamski.illogical
 
-////////////////////////////////////////////////
-// grammar
-////////////////////////////////////////////////
-
-
-/*
-
-Qu    -> quantifiertoken
-Op    -> operator_token
-Con   -> string
-Var   -> string
-Func  -> string
-Pred  -> string
-
-Args  -> Term | Term, Args
-Term  -> Con | Var | Func(Args)
-Form  -> Pred(Args) | Not Form | Form Op Form | Qu Var Form
-Literal -> Atom | Not Atom
-Clause  -> Literal OR Literal
-Atom  -> Pred(Args)
-#Form  -> Atom
-
-*/
-
-sealed abstract class QuToken
-case object FORALL extends QuToken
-case object EXISTS extends QuToken
-
-sealed abstract class OpToken {
-  def isCommutative = this match {
-    case OR | AND | NOR | NAND | XOR => true
-    case _ => false
-  }
-
-  def isAssociative = this match {
-    case OR | AND | NOR | NAND | XOR => true
-    case _ => false
-  }
-}
-
-case object OR extends OpToken
-case object AND extends OpToken
-case object NOR extends OpToken
-case object NAND extends OpToken
-case object XOR extends OpToken
-case object IMP extends OpToken
-case object EQV extends OpToken
-
-sealed abstract class Node
-
-case class Con(name: String) extends Term
-case class Var(name: String) extends Term
-case class Func(name: String, arguments: List[Term]) extends Term
-
 case class Pred(name: String, arguments: List[Term]) extends Form
+
 case class Not(form: Form) extends Form
+
 case class Qu(token: QuToken, variable: Var, form: Form) extends Form
 
 case class Op(leftForm: Form, token: OpToken, rightForm: Form) extends Form {
-  def isAssociative = token.isAssociative
 
-  def isCommutative = token.isCommutative
+  def isAssociative = 
+    token.isAssociative
+
+  def isCommutative = 
+    token.isCommutative
 
   def equals(o: Op) =
-    token == o.token && ((leftForm == o.leftForm && rightForm == o.rightForm) || (leftForm == o.rightForm && rightForm == o.leftForm && token.isCommutative))
+    token == o.token && ((leftForm == o.leftForm && rightForm == o.rightForm) || 
+      (leftForm == o.rightForm && rightForm == o.leftForm && token.isCommutative))
 
   override def equals(o: Any) = o match {
-    case other: Op => equals(other)
-    case _ => false
-  }
-}
-
-case class PartialQu(token: QuToken, variable: Var) {
-  def complete(form: Form): Form = Qu(token, variable, form)
-  def existential = token == EXISTS
-  def universal = token == FORALL
-}
-
-case class Sub(v: Var, t: Term) {
-  override def toString: String = 
-    s"${v.name} <- ${t}"
-
-  def sub(s: Set[Sub]) =
-    (for { sub <- s.find(_.v == v) } yield Sub(v, sub.t)) getOrElse this
-
-  def isFinal(s: Set[Sub]) = 
-    !s.exists(sub => t.contains(sub.v))
-}
-
-////////////////////////////////////////////////
-// LOGIC TRANSFORMATIONS
-////////////////////////////////////////////////
-
-trait LogicOps {
-  val converse: Form => Option[Form] = { 
-    case Op(a, token, b) => Some(Op(b, token, a))
-    case _ => None
-  }
-
-  val inverse: Form => Option[Form] = {
-    case Op(a, token, b) => Some(Op(Not(a), token, Not(b)))
-    case _ => None
-  }
-
-  val expand_not_quantifier: Form => Option[Form] = {
-    case Not(Qu(FORALL, v, p)) => Some(Qu(EXISTS, v, Not(p)))
-    case Not(Qu(EXISTS, v, p)) => Some(Qu(FORALL, v, Not(p)))
-    case _ => None
-  }
-
-  val expand_de_morgan: Form => Option[Form] = {
-    case Not(Op(a, AND, b)) => Some(Op(Not(a), OR, Not(b)))
-    case Not(Op(a, OR, b)) => Some(Op(Not(a), AND, Not(b)))
-    case _ => None
-  }
-
-  val expand_not_not: Form => Option[Form] = {
-    case Not(Not(a)) => Some(a)
-    case _ => None
-  }
-
-  val expand_imp: Form => Option[Form] = { 
-    case Op(a, IMP, b) => Some(Op(Not(a), OR, b))
-    case _ => None
-  }
-
-  val expand_eqv: Form => Option[Form] = { 
-    case Op(a, EQV, b) => Some(Not(Op(a, XOR, b)))
-    case _ => None
-  }
-
-  val expand_nand: Form => Option[Form] = { 
-    case Op(a, NAND,b) => Some(Not(Op(a, AND, b)))
-    case _ => None
-  }
-
-  val expand_nor: Form => Option[Form] = { 
-    case Op(a, NOR, b) => Some(Not(Op(a, OR, b)))
-    case _ => None
-  }
-
-  val expand_xor: Form => Option[Form] = { 
-    case Op(a, XOR, b) => Some(Op(Op(a, OR, b), AND, Op(a, NAND, b)))
-    case _ => None
-  }
-}
-
-////////////////////////////////////////////////
-// TERM & FORM
-////////////////////////////////////////////////
-
-
-sealed abstract class Term extends Node {
-
-  override def toString: String = TextFormatter.fmt(this)
-
-  def renaming(v1: Var, v2: Var): Term = this match {
-    case Func(t, args) =>
-      Func(t, args.map(_.renaming(v1, v2)))
-    case `v1` => v2
-    case _ => this
-  }
-
-  def sub(s: Set[Sub]): Term = this match {
-    case Func(name, args) =>
-      Func(name, args.map(_.sub(s)))
-    case Var(name) =>
-      (for { sub <- s.find(_.v == this) } yield sub.t) getOrElse this
-    case _ => this
-  }
-
-  def contains(v: Var): Boolean = this match {
-    case Func(name, args) => args.exists { arg => arg.contains(v) }
-    case Var(name) => v.name == name
+    case o: Op => equals(o)
     case _ => false
   }
 
 }
 
-sealed abstract class Form extends Node with LogicOps {
+sealed abstract class Form extends Node with LogicLaws {
 
-  override def toString: String = TextFormatter.formatted(this)
-
-  def isAtom: Boolean = this match {
+  def isAtom = this match {
     case _: Pred => true
     case _ => false
   }
 
-  def isLiteral: Boolean = this match {
+  def isLiteral = this match {
     case Not(term) => term.isAtom
     case _ => this.isAtom
   }
 
-  def isClause: Boolean = this match {
+  def isClause = this match {
     case Op(a, OR, b) => a.isLiteral && b.isLiteral
     case _ => false
   }
-
 
   def pnf: Form = {
     var (suffix, quantifiers) = simplifyingOperators.simplifyingNegation.extractingQuantifiers
@@ -207,7 +50,7 @@ sealed abstract class Form extends Node with LogicOps {
   def skolemized: Form = {
     var (suffix, quantifiers) = simplifyingOperators.simplifyingNegation.extractingQuantifiers
     var skolemsub = skolemSubstitution(quantifiers)
-    quantifiers = quantifiers.filter(_.universal)
+    quantifiers = quantifiers.filter(_.isUniversal)
     suffix.cnf.sub(skolemsub).wrappedInQuantifiers(quantifiers)
   }
 
@@ -238,13 +81,10 @@ sealed abstract class Form extends Node with LogicOps {
     case Pred(t, a) => Pred(t, a.map(_.sub(g)))
   }
 
-  def skolemSubstitution(qs: List[PartialQu]): Set[Sub] =
-    skolemSubstitution(qs, Set())
-
-  def skolemSubstitution(qs: List[PartialQu], g: Set[Sub]): Set[Sub] = {
-    val es = qs.filter(_.existential)
+  def skolemSubstitution(qs: List[PartialQu]): Set[Sub] = {
+    val es = qs.filter(_.isExistential)
     val vs = es.map(q => qs.slice(0, qs.indexOf(q))
-      .filter(_.universal)
+      .filter(_.isUniversal)
       .map(_.variable))
     val zipped = es.map(_.variable) zip vs
     zipped.zipWithIndex.map { case (e, i) => 
@@ -352,5 +192,8 @@ sealed abstract class Form extends Node with LogicOps {
     case Pred(_, _) =>
       this
   }
-}
 
+  override def toString: String = 
+    TextFormatter.formatted(this)
+
+}

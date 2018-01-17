@@ -1,6 +1,6 @@
 package com.maxadamski.illogical
 
-case class Token(symbol: Symbol, value: String) {
+case class ParserToken(symbol: Symbol, value: String) {
   def matches(regex: String) = value.matches(regex)
 
   val notMatcher = raw"NOT|\~|\-|\!"
@@ -52,3 +52,4 @@ case class Token(symbol: Symbol, value: String) {
     else None
 
 }
+

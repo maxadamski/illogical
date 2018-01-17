@@ -23,3 +23,20 @@ Proste w użyciu narzędzia logiki pierwszego rzędu
 - [ ] Rezolucja
 	- [ ] Spełnialność
 	- [ ] Prawdziwość
+
+## Grammar
+
+- Qu $\to$ $\forall$ | $\exists$
+- Op $\to$ $$ | $\lnot$ | $\land$ | $\lor$ …
+- Con $\to$ string
+- Var $\to$ string
+- Func $\to$ string
+- Pred $\to$ string
+
+- Args $\to$ Term | Term, Args $\to$ List(Term)
+- Term $\to$ Con | Var | Func(Args)
+- Atom $\to$ Pred(Args)
+- Form $\to$ Atom | Not Form | Form Op Form | Qu Var Form
+- Literal $\to$ Atom | Not Atom
+- Clause $\to$ Literal OR Literal
+

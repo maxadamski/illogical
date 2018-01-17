@@ -21,16 +21,16 @@ object Parser {
 
   // Node parsers
 
-  def isBalanced(ts: List[Token]) = 
+  def isBalanced(ts: List[ParserToken]) = 
     ts.count(_.isLeftBrace) == ts.count(_.isRightBrace)
 
-  def unbraced(ts: List[Token]): Option[List[Token]] = ts match {
+  def unbraced(ts: List[ParserToken]): Option[List[ParserToken]] = ts match {
     case lbrace +: tokens :+ rbrace if lbrace.isLeftBrace && rbrace.isRightBrace && isBalanced(tokens) => 
       Some(tokens)
     case _ => None
   }
 
-  def getTerm(ts: List[Token]): Option[Term] = unbraced(ts) match {
+  def getTerm(ts: List[ParserToken]): Option[Term] = unbraced(ts) match {
     case Some(x) =>
       //println("unbracing term")
       getFunc(ts) orElse getVar(ts) orElse getCon(ts) orElse getTerm(x)
@@ -39,7 +39,7 @@ object Parser {
       getFunc(ts) orElse getVar(ts) orElse getCon(ts)
   }
 
-  def getForm(ts: List[Token]): Option[Form] = unbraced(ts) match {
+  def getForm(ts: List[ParserToken]): Option[Form] = unbraced(ts) match {
     case Some(x) =>
       //println("unbracing form")
       getOp(ts) orElse getNot(ts) orElse getQu(ts) orElse getPred(ts) orElse getForm(x)
@@ -51,17 +51,17 @@ object Parser {
 
   // Term parsers
 
-  def getCon(ts: List[Token]): Option[Con] = ts match {
+  def getCon(ts: List[ParserToken]): Option[Con] = ts match {
     case name :: Nil if name.isCon => Some(Con(name.value))
     case _ => None
   }
 
-  def getVar(ts: List[Token]): Option[Var] = ts match {
+  def getVar(ts: List[ParserToken]): Option[Var] = ts match {
     case name :: Nil if name.isVar => Some(Var(name.value))
     case _ => None
   }
 
-  def getFunc(ts: List[Token]): Option[Term] = ts match {
+  def getFunc(ts: List[ParserToken]): Option[Term] = ts match {
     case name +: lbrace +: tokens :+ rbrace if name.isFunc && lbrace.isLeftBrace && rbrace.isRightBrace => 
       //println("get func")
       makeFunc(name.value, getArgs(tokens))
@@ -72,7 +72,7 @@ object Parser {
 
   // Form parsers
 
-  def getPred(ts: List[Token]): Option[Form] = ts match {
+  def getPred(ts: List[ParserToken]): Option[Form] = ts match {
     case name +: lbrace +: tokens :+ rbrace if name.isPred && lbrace.isLeftBrace && rbrace.isRightBrace => 
       //println("get pred")
       makePred(name.value, getArgs(tokens))
@@ -81,7 +81,7 @@ object Parser {
       None
   }
 
-  def getNot(ts: List[Token]): Option[Form] = ts match {
+  def getNot(ts: List[ParserToken]): Option[Form] = ts match {
     case head +: lbrace +: tokens :+ rbrace if head.isNOT && lbrace.isLeftBrace && rbrace.isRightBrace =>
       makeNot(getForm(tokens))
     case head :: tail if head.isNOT => 
@@ -89,15 +89,15 @@ object Parser {
       makeNot(getForm(tail))
     // UGLY HACK: negation and quantifier operator is lexed as one token
     case head :: tail if head.isNOTEXISTS => 
-      makeNot(getQu(Token('op, "E") +: tail))
+      makeNot(getQu(ParserToken('op, "E") +: tail))
     case head :: tail if head.isNOTFORALL => 
-      makeNot(getQu(Token('op, "A") +: tail))
+      makeNot(getQu(ParserToken('op, "A") +: tail))
     case _ =>
       //println("could not get not")
       None
   }
 
-  def getQu(ts: List[Token]): Option[Form] = ts match {
+  def getQu(ts: List[ParserToken]): Option[Form] = ts match {
     case t +: v +: tokens if t.isOp && v.isVar =>
       //println("get qu")
       makeQu(t.quToken, getVar(List(v)), getForm(tokens))
@@ -106,7 +106,7 @@ object Parser {
       None
   }
 
-  def nestedArgs(ts: List[Token]): (List[Token], List[Token]) = {
+  def nestedArgs(ts: List[ParserToken]): (List[ParserToken], List[ParserToken]) = {
     // TODO: clean up this mess...
     val (name, lbrace, tokens) = (ts(0), ts(1), ts.drop(2))
     var level = -1
@@ -129,10 +129,10 @@ object Parser {
     }
   }
 
-  def getArgs(token: Token): List[Term] = 
+  def getArgs(token: ParserToken): List[Term] = 
     List(getTerm(List(token))).flatten
 
-  def getArgs(ts: List[Token]): List[Term] = ts match {
+  def getArgs(ts: List[ParserToken]): List[Term] = ts match {
     case name :: Nil => 
       //println("last arg")
       //println(Lexer.repr(ts))
@@ -149,10 +149,10 @@ object Parser {
     case _ => List()
   }
 
-  def isOpToken(t: Token) = t.opToken match { case Some(_) => true; case _ => false }
+  def isOpToken(t: ParserToken) = t.opToken match { case Some(_) => true; case _ => false }
 
 
-  def opSplitIndex(ts: List[Token]): Int = {
+  def opSplitIndex(ts: List[ParserToken]): Int = {
     var split = -1
     var level = 0
     var i = ts.length - 1
@@ -168,7 +168,7 @@ object Parser {
     split
   }
 
-  def getOp(ts: List[Token]): Option[Form] = {
+  def getOp(ts: List[ParserToken]): Option[Form] = {
     val i = opSplitIndex(ts)
     if (i == -1) return None
     var (p, q) = ts.splitAt(i)
