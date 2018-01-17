@@ -4,10 +4,17 @@ Proste w użyciu narzędzia logiki pierwszego rzędu
 
 ## Features
 
-- [ ] Przekształcenia
-	- [ ] Koniunkcyjna postać normalna (CNF)
-	- [ ] Przedrostkowa postać normalna (PNF)
-	- [ ] Przemianowanie zmiennych
+- [x] Przekształcenia
+	- [x] Wyrażenie operatora za pomocą AND, OR, NOT
+	- [x] Prawo De Morgana
+	- [x] Negacja kwantyfikatora
+	- [x] Koniunkcyjna postać normalna (CNF)
+	- [x] Przedrostkowa postać normalna (PNF)
+	- [x] Przemianowanie zmiennych
+- [x] Skolemizacja
+	- [x] Wprowadzenie funkcji Skolema
+- [ ] Uzgadnianie
+	- [ ] Most general unifier (MGU)
 - [ ] Metoda tablic semantycznych (MTS)
 	- [ ] Spełnialność
 	- [ ] Prawdziwość
@@ -16,5 +23,3 @@ Proste w użyciu narzędzia logiki pierwszego rzędu
 - [ ] Rezolucja
 	- [ ] Spełnialność
 	- [ ] Prawdziwość
-- [ ] Skolemizacja
-- [ ] Uzgadnianie

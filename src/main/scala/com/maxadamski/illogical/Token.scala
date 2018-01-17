@@ -28,8 +28,8 @@ case class Token(symbol: Symbol, value: String) {
   def isNOR    = isOp && matches(s"(N|${notMatcher})(${orMatcher})")
   def isXOR    = isOp && matches(s"X(${orMatcher})")
 
-  def isCon  = isId && matches(raw"(c\.|\#)[a-z]+|[abc]")
-  val isVar  = isId && matches(raw"(v\.|\$$)[a-z]+|[uvwxyz]")
+  def isCon  = isId && matches(raw"(c\.|\#)[a-z]+|[abck]")
+  val isVar  = isId && matches(raw"(v\.|\$$)[a-z]+|[uvwxyzs]\'*")
   val isFunc = isId && matches(raw"(f\.|\@)[a-z]+|[fgh]")
   val isPred = isId && matches(raw"(p\.|\?)[a-z]+|[pqr]")
 
