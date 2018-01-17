@@ -7,7 +7,7 @@ object Main {
     case Some(form) => 
       printForm(form)
       printForm(form.cnf)
-      printForm(form.skolemized)
+      printForm(Skolemizer.skolemized(form))
     case None => 
       println("invalid form!")
   }

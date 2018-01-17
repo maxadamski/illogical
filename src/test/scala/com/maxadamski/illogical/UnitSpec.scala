@@ -21,7 +21,7 @@ abstract class UnitSpec extends FunSpec with Matchers {
 
   def itShouldSkolemize(in: String, out: Form): Unit = {
     it(s"should skolemize <${in}> to <${out}>") {
-      out.skolemized shouldEqual out
+      Skolemizer.skolemized(out) shouldEqual out
     }
   }
 

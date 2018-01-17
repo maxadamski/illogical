@@ -42,17 +42,7 @@ sealed abstract class Form extends Node with LogicLaws {
     case _ => false
   }
 
-  def pnf: Form = {
-    var (suffix, quantifiers) = simplifyingOperators.simplifyingNegation.extractingQuantifiers
-    suffix.cnf.simplifyingOperators.simplifyingNegation.wrappedInQuantifiers(quantifiers)
-  }
-
-  def skolemized: Form = {
-    var (suffix, quantifiers) = simplifyingOperators.simplifyingNegation.extractingQuantifiers
-    var skolemsub = skolemSubstitution(quantifiers)
-    quantifiers = quantifiers.filter(_.isUniversal)
-    suffix.cnf.sub(skolemsub).wrappedInQuantifiers(quantifiers)
-  }
+  def pnf: Form = Skolemizer.pnf(this)
 
   def cnf: Form = this match {
     case Op(Pred(_, _), _, Pred(_, _)) => 
@@ -81,20 +71,6 @@ sealed abstract class Form extends Node with LogicLaws {
     case Pred(t, a) => Pred(t, a.map(_.sub(g)))
   }
 
-  def skolemSubstitution(qs: List[PartialQu]): Set[Sub] = {
-    val es = qs.filter(_.isExistential)
-    val vs = es.map(q => qs.slice(0, qs.indexOf(q))
-      .filter(_.isUniversal)
-      .map(_.variable))
-    val zipped = es.map(_.variable) zip vs
-    zipped.zipWithIndex.map { case (e, i) => 
-      e match {
-        case (v, Nil) => Sub(v, Con("k" + (i + 1)))
-        case (v, vs) => Sub(v, Func("s" + (i + 1), vs))
-      }
-    }.toSet
-  }
-
   def renaming(v1: Var, v2: Var): Form = this match {
     case Pred(t, args) =>
       Pred(t, args.map(_.renaming(v1, v2)))
@@ -107,36 +83,6 @@ sealed abstract class Form extends Node with LogicLaws {
       Not(p.renaming(v1, v2))
   }
 
-  def wrappedInQuantifiers(qs: List[PartialQu]): Form = qs match {
-    case x :: _ => 
-      qs.last.complete(this).wrappedInQuantifiers(qs.dropRight(1))
-    case Nil => 
-      this
-  }
-
-  def extractingQuantifiers: (Form, List[PartialQu]) = {
-    val (form, vars, qus) = extractingQuantifiers(List(), List())
-    (form, qus)
-  }
-
-  def extractingQuantifiers(vars: List[Var], qs: List[PartialQu]): (Form, List[Var], List[PartialQu]) = this match {
-    case Qu(t, v, p) =>
-      var newVar = v
-      while (vars.contains(newVar)) newVar = Var(newVar.name + "'")
-      val renamed = p.renaming(v, newVar)
-      val (newP, newVars, newQs) = renamed.extractingQuantifiers(vars :+ newVar, qs)
-      (newP,  newVars, PartialQu(t, newVar) +: newQs)
-
-    case Op(p, t, q) =>
-      val (newP, newPVars, newPQs) = p.extractingQuantifiers(vars, qs)
-      val (newQ, newQVars, newQQs) = q.extractingQuantifiers(newPVars, qs)
-      (Op(newP, t, newQ), newPVars ++ newQVars, newPQs ++ newQQs)
-    case Not(p) =>
-      val (newP, newVars, newQs) = p.extractingQuantifiers(vars, qs)
-      (Not(newP), newVars, newQs)
-    case Pred(_, _) =>
-      (this, vars, qs)
-  }
 
   def simplifyingBinaryOperator: Option[Form] = this match {
       case Op(_, NAND,_) => expand_nand(this)

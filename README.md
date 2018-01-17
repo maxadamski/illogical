@@ -39,4 +39,3 @@ Proste w użyciu narzędzia logiki pierwszego rzędu
 - Form $\to$ Atom | Not Form | Form Op Form | Qu Var Form
 - Literal $\to$ Atom | Not Atom
 - Clause $\to$ Literal OR Literal
-
