@@ -26,6 +26,10 @@ class FormSpec extends UnitSpec {
 
     describe("mgu") {
       itShouldMGU("p(a, x, f(g(y)))", "p(y, f(z), f(z))", Set(Sub(Var("x"), Func("f", List(Func("g", List(Con("a")))))), Sub(Var("y"), Con("a")), Sub(Var("z"), Func("g", List(Con("a"))))))
+      itShouldMGU("p(a, x, f(g(y)))", "p(z, h(z,u), f(u))", Set(Sub(Var("z"), Con("a")), Sub(Var("u"), Func("g", List(Var("y")))), Sub(Var("x"), Func("h", List(Con("a"), Func("g", List(Var("y"))))))))
+      itShouldNotMGU("p(x,g(f(a)),f(x))", "p(f(a),y,y)")
+      itShouldNotMGU("p(x,g(f(a)),f(x))", "p(f(y),z,y)")
+      itShouldNotMGU("p(x,f(x))", "p(f(y),y)")
     }
 
       // 4.

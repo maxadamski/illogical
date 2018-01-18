@@ -32,6 +32,13 @@ abstract class UnitSpec extends FunSpec with Matchers {
     }
   }
 
+  def itShouldNotMGU(pString: String, qString: String): Unit = {
+    val (p, q) = (Parser.parse(pString).get, Parser.parse(qString).get)
+    it(s"should not mgu <${pString}> and <${qString}>") {
+      Unifier.mgu(p, q) shouldEqual None
+    }
+  }
+
 
   val (x, y, z) = (Var("x"), Var("y"), Var("z"))
   val (p, q, r) = (Pred("p", List(x)), Pred("q", List(x)), Pred("r", List(x)))

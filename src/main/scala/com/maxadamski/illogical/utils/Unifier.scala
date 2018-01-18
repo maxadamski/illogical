@@ -22,7 +22,10 @@ object Unifier {
 
       if (partial.forall(_ != None)) {
         val flat = partial.flatten
-        if (flat.forall(_.isFinal(flat)))
+
+        if (subConflict(flat))
+          return None
+        else if (flat.forall(_.isFinal(flat)))
           return Some(flat)
       }
 
@@ -48,9 +51,13 @@ object Unifier {
     return None
   }
 
+  private def subConflict(mgu: Set[Sub]) =
+    mgu.groupBy(_.v).exists { case (_, sub) => sub.map(_.t).toSet.size > 1 }
+
   private def makeSubs(set: Set[(Term, Term)]) = set.map {
     case (v: Var, t: Term) => Some(Sub(v, t))
     case _ => None
   }
+  
 }
 
