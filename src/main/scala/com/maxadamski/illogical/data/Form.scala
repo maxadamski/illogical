@@ -1,6 +1,6 @@
 package com.maxadamski.illogical
 
-case class Pred(name: String, arguments: List[Term]) extends Form
+case class Pred(name: String, arguments: List[Term]) extends Form with WithArgs with Named
 
 case class Not(form: Form) extends Form
 
@@ -64,11 +64,11 @@ sealed abstract class Form extends Node with LogicLaws {
       this
   }
 
-  def sub(g: Set[Sub]): Form = this match {
-    case Op(p, t, q) => Op(p.sub(g), t, q.sub(g))
-    case Qu(t, v, p) => Qu(t, v, p.sub(g))
-    case Not(p) => Not(p.sub(g))
-    case Pred(t, a) => Pred(t, a.map(_.sub(g)))
+  def substituting(g: Set[Sub]): Form = this match {
+    case Op(p, t, q) => Op(p.substituting(g), t, q.substituting(g))
+    case Qu(t, v, p) => Qu(t, v, p.substituting(g))
+    case Pred(t, a) => Pred(t, a.map(_.substituting(g)))
+    case Not(p) => Not(p.substituting(g))
   }
 
   def renaming(v1: Var, v2: Var): Form = this match {

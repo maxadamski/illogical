@@ -26,6 +26,18 @@ Proste w użyciu narzędzia logiki pierwszego rzędu
 - [ ] Interfejs wiersza poleceń
 - [ ] Webowy interfejs
 
+## How to run
+
+```sh
+sbt run
+ ```
+
+## How to test
+
+```sh
+sbt ~test
+```
+
 ## Grammar
 
 - Qu $\to$ $\forall$ | $\exists$

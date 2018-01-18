@@ -5,7 +5,7 @@ object Skolemizer {
   def skolemized(form: Form): Form = {
     val (suffix, qus) = partialPNF(form.simplifyingOperators.simplifyingNegation)
     val universalQus = qus.filter(_.isUniversal)
-    val skolemized = suffix.cnf.sub(skolemSub(qus))
+    val skolemized = suffix.cnf.substituting(skolemSub(qus))
     wrapped(skolemized, universalQus)
   }
 

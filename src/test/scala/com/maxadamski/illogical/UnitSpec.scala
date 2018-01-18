@@ -4,7 +4,7 @@ import org.scalatest._
 
 abstract class UnitSpec extends FunSpec with Matchers {
   def shouldParse(formula: String, result: Form, comment: String = "") {
-    it(s"should parse `${formula}`" + comment) {
+    it(s"should parse `$formula`" + comment) {
       Parser.parse(formula) shouldEqual Some(result)
     }
   }
@@ -16,25 +16,25 @@ abstract class UnitSpec extends FunSpec with Matchers {
   }
 
   def itShouldPNF(in: String, out: String): Unit = {
-    shouldEqual(s"should pnf <${in}> to <${out}>", in, out, _.pnf)
+    shouldEqual(s"should pnf $in", in, out, _.pnf)
   }
 
   def itShouldSkolemize(in: String, out: Form): Unit = {
-    it(s"should skolemize <${in}> to <${out}>") {
+    it(s"should skolemize $in") {
       Skolemizer.skolemized(out) shouldEqual out
     }
   }
 
   def itShouldMGU(pString: String, qString: String, mgu: Set[Sub]): Unit = {
     val (p, q) = (Parser.parse(pString).get, Parser.parse(qString).get)
-    it(s"should mgu <${pString}> and <${qString}> to <${mgu}>") {
+    it(s"should mgu $pString and $qString") {
       Unifier.mgu(p, q) shouldEqual Some(mgu)
     }
   }
 
   def itShouldNotMGU(pString: String, qString: String): Unit = {
     val (p, q) = (Parser.parse(pString).get, Parser.parse(qString).get)
-    it(s"should not mgu <${pString}> and <${qString}>") {
+    it(s"should not mgu $pString and $qString") {
       Unifier.mgu(p, q) shouldEqual None
     }
   }
