@@ -52,4 +52,4 @@ sbt ~test
 - Atom → Pred(Args)
 - Form → Atom | ¬Form | Form Op Form | Qu Var Form
 - Literal → Atom | ¬Atom
-- Clause → Literal OR Literal
+- Clause → Literal ∨ Literal
