@@ -45,6 +45,8 @@ object Unifier {
           g += ((x, y.substituting(makeSubs(g).flatten)))
         case (v: Var, f: Func) if f.contains(v) => 
           return None
+        case _ =>
+          return None
       }
     }
 

@@ -23,7 +23,7 @@ Proste w użyciu narzędzia logiki pierwszego rzędu
 - [ ] Rezolucja
 	- [ ] Spełnialność
 	- [ ] Prawdziwość
-- [ ] Interfejs wiersza poleceń
+- [x] Interfejs wiersza poleceń
 - [ ] Webowy interfejs
 
 ## How to run
