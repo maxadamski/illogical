@@ -1,6 +1,6 @@
 # Illogical (WIP)
 
-Easy to use first order logic tools.
+Easy-to-use first order logic tools.
 
 ## Features
 
