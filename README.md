@@ -1,30 +1,24 @@
 # Illogical (WIP)
 
-Proste w użyciu narzędzia logiki pierwszego rzędu
+Easy to use first order logic tools.
 
 ## Features
 
-- [x] Przekształcenia
-	- [x] Wyrażenie operatora za pomocą AND, OR, NOT
-	- [x] Prawo De Morgana
-	- [x] Negacja kwantyfikatora
-	- [x] Koniunkcyjna postać normalna (CNF)
-	- [x] Przedrostkowa postać normalna (PNF)
-	- [x] Przemianowanie zmiennych
-- [x] Skolemizacja
-	- [x] Wprowadzenie funkcji Skolema
-- [x] Uzgadnianie
+- [x] Formula transformations
+	- [x] Express in terms of AND, OR, NOT
+	- [x] De Morgan's laws
+	- [x] Quantifier negation
+	- [x] Conjunctive normal form (CNF)
+	- [x] Prenex normal form (PNF)
+	- [x] Substitute variables, etc.
+- [x] Skolemization
+	- [x] Substitute Skolem's function
+- [x] Unification
 	- [x] Most general unifier (MGU)
-- [ ] Metoda tablic semantycznych (MTS)
-	- [ ] Spełnialność
-	- [ ] Prawdziwość
-	- [ ] Logiczna rownoważność
-	- [ ] Logiczna konsekwencja
-- [ ] Rezolucja
-	- [ ] Spełnialność
-	- [ ] Prawdziwość
-- [x] Interfejs wiersza poleceń
-- [ ] Webowy interfejs
+- [ ] Semantic tableaux method (MTS)
+- [ ] Resolution method
+- [x] CLI client
+- [ ] Web client
 
 ## How to run
 
@@ -40,16 +34,18 @@ sbt ~test
 
 ## Grammar
 
-- Qu → ∀ | ∃
-- Op → ∧ | ∨ | …
-- Con → string
-- Var → string
-- Func → string
-- Pred → string
+```
+Qu      → ∀ | ∃
+Op      → ∧ | ∨ | …
+Con     → string
+Var     → string
+Func    → string
+Pred    → string
 
-- Args → Term | Term, Args → List(Term)
-- Term → Con | Var | Func(Args)
-- Atom → Pred(Args)
-- Form → Atom | ¬Form | Form Op Form | Qu Var Form
-- Literal → Atom | ¬Atom
-- Clause → Literal ∨ Literal
+Args    → Term | Term, Args → List(Term)
+Term    → Con | Var | Func(Args)
+Atom    → Pred(Args)
+Form    → Atom | ¬Form | Form Op Form | Qu Var Form
+Literal → Atom | ¬Atom
+Clause  → Literal ∨ Literal
+```
