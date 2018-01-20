@@ -37,10 +37,11 @@ sbt ~test
 ```
 Qu      → ∀ | ∃
 Op      → ∧ | ∨ | …
-Con     → string
-Var     → string
-Func    → string
-Pred    → string
+Id      → [a-z]+[0-9]*[']*
+Con     → @Id
+Var     → Id
+Func    → Id
+Pred    → Id
 
 Args    → Term | Term, Args → List(Term)
 Term    → Con | Var | Func(Args)

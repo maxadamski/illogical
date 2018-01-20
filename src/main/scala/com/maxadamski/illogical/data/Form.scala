@@ -44,7 +44,7 @@ sealed abstract class Form extends Node with LogicLaws {
 
   def pnf: Form = Skolemizer.pnf(this)
 
-  def cnf: Form = this match {
+  def cnf: Form = this.simplifyingOperators.simplifyingNegation match {
     case Op(Pred(_, _), _, Pred(_, _)) => 
       this
     // a | (b & c) === (a | b) & (a | c)
@@ -116,15 +116,13 @@ sealed abstract class Form extends Node with LogicLaws {
   }
 
   def simplifyingNegation: Form = this match {
+      // TODO: do something about the force unwrapping
     case Not(form) => form match {
       case Qu(_, _, _) =>
-        // TODO: do something about the force unwrapping
         expand_not_quantifier(this).get.simplifyingNegation
       case Not(_) =>
-        // TODO: do something about the force unwrapping
         expand_not_not(this).get
       case Op(_, AND, _) | Op(_, OR, _) =>
-        // TODO: do something about the force unwrapping
         expand_de_morgan(this).get
       case Op(_, _, _) =>
         simplifyingOperators.simplifyingNegation

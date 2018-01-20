@@ -11,11 +11,11 @@ class ParserSpec extends UnitSpec {
       describe("given atom") {
 
         it("should parse atom with constant") {
-          Parser.parse("p(a)") shouldEqual Some(Pred("p", List(Con("a"))))
+          Parser.parse("p(@a)") shouldEqual Some(Pred("p", List(Con("a"))))
         }
 
         it("should parse atom with multiple constants") {
-          Parser.parse("p(a, b)") shouldEqual Some(Pred("p", List(Con("a"), Con("b"))))
+          Parser.parse("p(@a, @b)") shouldEqual Some(Pred("p", List(Con("a"), Con("b"))))
         }
 
         it("should parse atom with variable") {
@@ -38,7 +38,7 @@ class ParserSpec extends UnitSpec {
         }
 
         it("should parse atom with complex arguments") {
-          Parser.parse("p(x, f(x, f(x, y), y), a, f(f(f(z))))") shouldEqual
+          Parser.parse("p(x, f(x, f(x, y), y), @a, f(f(f(z))))") shouldEqual
             Some(Pred("p", List(Var("x"), Func("f", List(Var("x"), Func("f", List(Var("x"), Var("y"))), Var("y"))), Con("a"), 
               Func("f", List(Func("f", List(Func("f", List(Var("z"))))))))))
         }
@@ -133,17 +133,17 @@ class ParserSpec extends UnitSpec {
           )
         ))))
 
-        shouldParse("Ev.jAx(Ev.ry p.au(f(x, y, z)) | Ez(-p.qa(z) & p(v.a)))", 
-          Qu(EXISTS, Var("v.j"), 
+        shouldParse("EjAx(Ery au(f(x, y, z)) | Ez(-qa(z) & p(a)))", 
+          Qu(EXISTS, Var("j"), 
             Qu(FORALL, x, 
               Op(
-                Qu(EXISTS, Var("v.ry"), Pred("p.au", List(Func("f", List(x, y, z))))),
+                Qu(EXISTS, Var("ry"), Pred("au", List(Func("f", List(x, y, z))))),
                 OR,
                 Qu(EXISTS, z, 
                   Op(
-                    Not(Pred("p.qa", List(z))), 
+                    Not(Pred("qa", List(z))), 
                     AND, 
-                    Pred("p", List(Var("v.a")))
+                    Pred("p", List(Var("a")))
                   )
                 )
               )

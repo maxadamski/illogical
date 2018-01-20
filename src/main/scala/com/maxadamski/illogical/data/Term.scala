@@ -14,6 +14,7 @@ trait WithArgs {
 
 case class Func(name: String, arguments: List[Term]) extends Term with WithArgs
 case class Var(name: String) extends Term
+
 case class Con(name: String) extends Term
 
 sealed abstract class Term extends Node {

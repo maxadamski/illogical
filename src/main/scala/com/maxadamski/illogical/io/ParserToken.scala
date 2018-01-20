@@ -28,10 +28,10 @@ case class ParserToken(symbol: Symbol, value: String) {
   def isNOR    = isOp && matches(s"(N|${notMatcher})(${orMatcher})")
   def isXOR    = isOp && matches(s"X(${orMatcher})")
 
-  def isCon  = isId && matches(raw"(c\.|\#)[a-z]+|[abck]")
-  val isVar  = isId && matches(raw"(v\.|\$$)[a-z]+|[uvwxyzs]\'*")
-  val isFunc = isId && matches(raw"(f\.|\@)[a-z]+|[fgh]")
-  val isPred = isId && matches(raw"(p\.|\?)[a-z]+|[pqr]")
+  def isCon  = isId && matches(raw"^@[a-z]+[0-9]*'*")
+  val isVar  = isId && matches(raw"^[a-z]+[0-9]*'*")
+  val isFunc = isId && matches(raw"^[a-z]+[0-9]*'*")
+  val isPred = isId && matches(raw"^[a-z]+[0-9]*'*")
 
   def isNOTEXISTS: Boolean = isOp && matches(s"(${notMatcher})(${existsMatcher})")
   def isNOTFORALL: Boolean = isOp && matches(s"(${notMatcher})(${forallMatcher})")

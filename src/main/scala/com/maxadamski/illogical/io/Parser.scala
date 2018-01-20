@@ -30,41 +30,41 @@ object Parser {
     case _ => None
   }
 
-  def getTerm(ts: List[ParserToken]): Option[Term] = unbraced(ts) match {
+  def getTerm(ts: List[ParserToken], in: Symbol): Option[Term] = unbraced(ts) match {
     case Some(x) =>
       //println("unbracing term")
-      getFunc(ts) orElse getVar(ts) orElse getCon(ts) orElse getTerm(x)
+      getFunc(ts, in) orElse getVar(ts, in) orElse getCon(ts, in) orElse getTerm(x, in)
     case None =>
       //println("get term")
-      getFunc(ts) orElse getVar(ts) orElse getCon(ts)
+      getFunc(ts, in) orElse getVar(ts, in) orElse getCon(ts, in)
   }
 
   def getForm(ts: List[ParserToken]): Option[Form] = unbraced(ts) match {
     case Some(x) =>
       //println("unbracing form")
-      getOp(ts) orElse getNot(ts) orElse getQu(ts) orElse getPred(ts) orElse getForm(x)
+      getOp(ts) orElse getNot(ts) orElse getQu(ts) orElse getPred(ts, 'form) orElse getForm(x)
     case None =>
       //println("get form")
       //println(Lexer.repr(ts))
-      getOp(ts) orElse getNot(ts) orElse getQu(ts) orElse getPred(ts)
+      getOp(ts) orElse getNot(ts) orElse getQu(ts) orElse getPred(ts, 'form)
   }
 
   // Term parsers
 
-  def getCon(ts: List[ParserToken]): Option[Con] = ts match {
-    case name :: Nil if name.isCon => Some(Con(name.value))
+  def getCon(ts: List[ParserToken], in: Symbol): Option[Con] = ts match {
+    case name :: Nil if name.isCon => Some(Con(name.value.drop(1)))
     case _ => None
   }
 
-  def getVar(ts: List[ParserToken]): Option[Var] = ts match {
-    case name :: Nil if name.isVar => Some(Var(name.value))
+  def getVar(ts: List[ParserToken], in: Symbol): Option[Var] = ts match {
+    case name :: Nil if (List('qu, 'pred, 'func) contains in) && name.isVar => Some(Var(name.value))
     case _ => None
   }
 
-  def getFunc(ts: List[ParserToken]): Option[Term] = ts match {
-    case name +: lbrace +: tokens :+ rbrace if name.isFunc && lbrace.isLeftBrace && rbrace.isRightBrace => 
+  def getFunc(ts: List[ParserToken], in: Symbol): Option[Term] = ts match {
+    case name +: lbrace +: tokens :+ rbrace if (List('pred, 'func) contains in) && lbrace.isLeftBrace && rbrace.isRightBrace => 
       //println("get func")
-      makeFunc(name.value, getArgs(tokens))
+      makeFunc(name.value, getArgs(tokens, 'func))
     case _ => 
       //println("could not get func")
       None
@@ -72,10 +72,10 @@ object Parser {
 
   // Form parsers
 
-  def getPred(ts: List[ParserToken]): Option[Form] = ts match {
+  def getPred(ts: List[ParserToken], in: Symbol): Option[Form] = ts match {
     case name +: lbrace +: tokens :+ rbrace if name.isPred && lbrace.isLeftBrace && rbrace.isRightBrace => 
       //println("get pred")
-      makePred(name.value, getArgs(tokens))
+      makePred(name.value, getArgs(tokens, 'pred))
     case _ => 
       //println("could not get pred")
       None
@@ -100,7 +100,7 @@ object Parser {
   def getQu(ts: List[ParserToken]): Option[Form] = ts match {
     case t +: v +: tokens if t.isOp && v.isVar =>
       //println("get qu")
-      makeQu(t.quToken, getVar(List(v)), getForm(tokens))
+      makeQu(t.quToken, getVar(List(v), 'qu), getForm(tokens))
     case _ =>
       //println("could not get qu")
       None
@@ -129,23 +129,23 @@ object Parser {
     }
   }
 
-  def getArgs(token: ParserToken): List[Term] = 
-    List(getTerm(List(token))).flatten
+  def getArgs(token: ParserToken, in: Symbol): List[Term] = 
+    List(getTerm(List(token), in)).flatten
 
-  def getArgs(ts: List[ParserToken]): List[Term] = ts match {
+  def getArgs(ts: List[ParserToken], in: Symbol): List[Term] = ts match {
     case name :: Nil => 
       //println("last arg")
       //println(Lexer.repr(ts))
-      getArgs(name)
+      getArgs(name, in)
     case name +: argsep +: tokens if name.isId && argsep.isArgSep => 
       //println("next arg")
       //println(Lexer.repr(ts))
-      getArgs(name) ++ getArgs(tokens)
+      getArgs(name, in) ++ getArgs(tokens, in)
     case name +: lbrace +: tokens if name.isId && lbrace.isLeftBrace => 
       val (current, next) = nestedArgs(ts)
       //println("big arg")
       //println(Lexer.repr(current))
-      List(getTerm(current)).flatten ++ getArgs(next)
+      List(getTerm(current, in)).flatten ++ getArgs(next, in)
     case _ => List()
   }
 
@@ -179,8 +179,6 @@ object Parser {
 
   def parse(equation: String): Option[Form] = {
     var tokens = Lexer.tokens(equation)
-    //println("start parsing " + equation)
-    //println(Lexer.repr(tokens))
     getForm(tokens)
   }
 }

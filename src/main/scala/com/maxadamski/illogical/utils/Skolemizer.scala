@@ -20,10 +20,17 @@ object Skolemizer {
       .filter(_.isUniversal)
       .map(_.variable))
     val zipped = es.map(_.variable) zip vs
+
+    var k = 0
+    var s = 0
     zipped.zipWithIndex.map { case (e, i) => 
       e match {
-        case (v, Nil) => Sub(v, Con("k" + (i + 1)))
-        case (v, vs) => Sub(v, Func("s" + (i + 1), vs))
+        case (v, Nil) => 
+          k += 1
+          Sub(v, Con("k" + k))
+        case (v, vs) => 
+          s += 1
+          Sub(v, Func("s" + s, vs))
       }
     }.toSet
   }

@@ -25,6 +25,14 @@ abstract class UnitSpec extends FunSpec with Matchers {
     }
   }
 
+  def itShouldSkolemize(in: String, out: String): Unit = {
+    it(s"should skolemize $in") {
+      val skol = Parser.parse(out).map(Skolemizer.skolemized)
+       skol shouldEqual Parser.parse(out)
+       skol should not equal None
+    }
+  }
+
   def itShouldMGU(pString: String, qString: String, mgu: Set[Sub]): Unit = {
     val (p, q) = (Parser.parse(pString).get, Parser.parse(qString).get)
     it(s"should mgu $pString and $qString") {

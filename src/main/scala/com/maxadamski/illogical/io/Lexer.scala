@@ -24,6 +24,6 @@ object Lexer {
 
   def repr(tokens: List[ParserToken]) = tokens
     .map(t => t.value)
-    .mkString("")
+    .mkString(" ")
 }
 
