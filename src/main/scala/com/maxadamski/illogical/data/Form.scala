@@ -42,24 +42,22 @@ sealed abstract class Form extends Node with LogicLaws {
     case _ => false
   }
 
-  def pnf: Form = Skolemizer.pnf(this)
+  def pnf: Form = {
+    val (suffix, qus) = simplifying.partialPNF
+    suffix.wrapped(qus)
+  }
 
-  def cnf: Form = this.simplifyingOperators.simplifyingNegation match {
-    case Op(Pred(_, _), _, Pred(_, _)) => 
-      this
-    // a | (b & c) === (a | b) & (a | c)
+  def cnf: Form = this.pnf match {
     case Op(p, OR, Op(q, AND, r)) => 
       Op(Op(p.cnf, OR, q.cnf), AND, Op(p.cnf, OR, r.cnf))
     case Op(Op(q, AND, r), OR, p) =>
       Op(Op(p.cnf, OR, q.cnf), AND, Op(p.cnf, OR, r.cnf))
-    case Op(p, OR, q) => 
-      Op(p.cnf, OR, q.cnf)
+    case Op(p, t, q) => 
+      Op(p.cnf, t, q.cnf)
     case Qu(token, v, p) =>
       Qu(token, v, p.cnf)
     case Not(p) =>
       Not(p.cnf)
-    case Pred(_, _) => 
-      this
     case _ =>
       this
   }
@@ -83,6 +81,49 @@ sealed abstract class Form extends Node with LogicLaws {
       Not(p.renaming(v1, v2))
   }
 
+  def simplifying: Form = {
+    var last = this
+    while (true) {
+      val simpler = last
+        .simplifyingOperators
+        .simplifyingNegation
+      if (last == simpler) 
+        return simpler
+      else
+        last = simpler
+    }
+    last
+  }
+
+  def wrapped(qs: List[PartialQu]): Form = qs match {
+    case x :: _ => 
+      qs.last.complete(this).wrapped(qs.dropRight(1))
+    case Nil => 
+      this
+  }
+
+  def partialPNF: (Form, List[PartialQu]) = {
+    val (suffix, vars, qus) = partialPNF(List(), List())
+    (suffix, qus)
+  }
+
+  def partialPNF(vars: List[Var], qs: List[PartialQu]): (Form, List[Var], List[PartialQu]) = this match {
+    case Qu(t, v, p) =>
+      var newVar = v
+      while (vars.contains(newVar)) newVar = Var(newVar.name + "'")
+      val renamed = p.renaming(v, newVar)
+      val (newP, newVars, newQs) = renamed.partialPNF(vars :+ newVar, qs)
+      (newP, newVars, PartialQu(t, newVar) +: newQs)
+    case Op(p, t, q) =>
+      val (newP, newPVars, newPQs) = p.partialPNF(vars, qs)
+      val (newQ, newQVars, newQQs) = q.partialPNF(newPVars, qs)
+      (Op(newP, t, newQ), newPVars ++ newQVars, newPQs ++ newQQs)
+    case Not(p) =>
+      val (newP, newVars, newQs) = p.partialPNF(vars, qs)
+      (Not(newP), newVars, newQs)
+    case Pred(_, _) =>
+      (this, vars, qs)
+  }
 
   def simplifyingBinaryOperator: Option[Form] = this match {
       case Op(_, NAND,_) => expand_nand(this)
@@ -116,7 +157,7 @@ sealed abstract class Form extends Node with LogicLaws {
   }
 
   def simplifyingNegation: Form = this match {
-      // TODO: do something about the force unwrapping
+    // TODO: do something about the force unwrapping
     case Not(form) => form match {
       case Qu(_, _, _) =>
         expand_not_quantifier(this).get.simplifyingNegation

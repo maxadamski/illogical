@@ -11,12 +11,20 @@ abstract class UnitSpec extends FunSpec with Matchers {
 
   def shouldEqual(message: String, in: String, out: String, transform: Form => Form): Unit = {
     it(message) {
-      transform(Parser.parse(in).get) shouldEqual Parser.parse(out).get
+      Parser.parse(in).map(transform) shouldEqual Parser.parse(out)
     }
   }
 
   def itShouldPNF(in: String, out: String): Unit = {
     shouldEqual(s"should pnf $in", in, out, _.pnf)
+  }
+
+  def itShouldSimplify(in: String, out: String): Unit = {
+    shouldEqual(s"should simplify $in", in, out, _.simplifying)
+  }
+
+  def itShouldCNF(in: String, out: String): Unit = {
+    shouldEqual(s"should cnf $in", in, out, _.cnf)
   }
 
   def itShouldSkolemize(in: String, out: Form): Unit = {
@@ -27,9 +35,9 @@ abstract class UnitSpec extends FunSpec with Matchers {
 
   def itShouldSkolemize(in: String, out: String): Unit = {
     it(s"should skolemize $in") {
-      val skol = Parser.parse(out).map(Skolemizer.skolemized)
-       skol shouldEqual Parser.parse(out)
-       skol should not equal None
+      val skol = Parser.parse(in).map(Skolemizer.skolemized)
+      skol shouldEqual Parser.parse(out)
+      skol should not equal None
     }
   }
 

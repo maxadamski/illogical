@@ -45,31 +45,30 @@ class ParserSpec extends UnitSpec {
 
       }
 
-
-      describe("given negated atom") {
-      
+      it("should parse negated atom") {
         List("-", "~", "!", "NOT").foreach { symbol =>
-
           val result = Not(Pred("p", List(Var("x"))))
-          shouldParse(s"${symbol}p(x)", result)
-          shouldParse(s"${symbol} p(x)", result)
-
+          Parser.parse(s"${symbol}p(x)") shouldEqual Some(result)
+          Parser.parse(s"${symbol} p(x)") shouldEqual Some(result)
         }
+      }
 
+      it("should parse universally quantified atom") {
+        List("A", "ALL", "FA", "FALL", "FORA", "FORALL").foreach { symbol =>
+          val result = Qu(FORALL, Var("x"), Pred("p", List(Var("x"))))
+          Parser.parse(s"${symbol}x p(x)") shouldEqual Some(result)
+        }
+      }
+
+      it("should parse existentially quantified atom") {
+        List("E", "EX", "EXIST", "EXISTS").foreach { symbol =>
+          val result = Qu(EXISTS, Var("x"), Pred("p", List(Var("x"))))
+          Parser.parse(s"${symbol}x p(x)") shouldEqual Some(result)
+        }
       }
 
 
       describe("given quantified atom") {
-
-          List("A", "ALL", "FA", "FALL", "FORA", "FORALL").foreach { symbol =>
-            val result = Qu(FORALL, Var("x"), Pred("p", List(Var("x"))))
-            shouldParse(s"${symbol}x p(x)", result)
-          }
-
-          List("E", "EX", "EXIST", "EXISTS").foreach { symbol =>
-            val result = Qu(EXISTS, Var("x"), Pred("p", List(Var("x"))))
-            shouldParse(s"${symbol}x p(x)", result)
-          }
 
           shouldParse("Ax Ay Az p(x, y, z)", Qu(FORALL, x, Qu(FORALL, y, Qu(FORALL, z, Pred("p", List(x, y, z))))))
 

@@ -80,7 +80,8 @@ ILLOGICAL v$version - interactive mode
             .foreach { f =>
               println("forms:")
               print("- regular:    "); printForm(f)
-              print("- conjuntive: "); printForm(f.cnf)
+              print("- simplified: "); printForm(f.simplifying)
+              print("- conjuntive: "); printForm(f.simplifying.cnf)
               print("- prenex:     "); printForm(f.pnf)
               print("- skolemized: "); printForm(Skolemizer.skolemized(f))
               println()
