@@ -27,19 +27,32 @@ case class Op(leftForm: Form, token: OpToken, rightForm: Form) extends Form {
 
 sealed abstract class Form extends Node with LogicLaws {
 
-  def isAtom = this match {
+  def isAtom: Boolean = this match {
     case _: Pred => true
     case _ => false
   }
 
-  def isLiteral = this match {
+  def isLiteral: Boolean = this match {
     case Not(term) => term.isAtom
     case _ => this.isAtom
   }
 
-  def isClause = this match {
-    case Op(a, OR, b) => a.isLiteral && b.isLiteral
-    case _ => false
+  def isClause: Boolean = this match {
+    // """correct clause"""
+    case Op(a, OR, b) if a.isLiteral && b.isLiteral => true 
+    // long clause
+    case Op(a, OR, b) if a.isClause && b.isClause => true 
+    // degenerate clause
+    case _ if isLiteral => true
+    // not a clause at all
+    case _ => false 
+  }
+
+  def clauses: Set[Form] = this match {
+    case _ if isClause => Set(this)
+    case Op(p, _, q) => p.clauses ++ q.clauses
+    case Qu(_, _, p) => Set()
+    case _ => Set()
   }
 
   def pnf: Form = {

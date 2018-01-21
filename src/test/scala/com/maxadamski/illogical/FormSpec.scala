@@ -165,6 +165,35 @@ class FormSpec extends UnitSpec {
 
     }
 
+    def itShouldGetClauses(form: String, expected: Set[String]) {
+      it(s"should get clauses '$form'") {
+        val f = Parser.parse(form)
+        val e = expected.map(Parser.parse)
+        e.foreach(clause => clause should not equal None)
+        f should not equal None
+        f.get.clauses shouldEqual e.flatten
+      }
+    }
+
+    describe("extracting clauses") {
+
+      itShouldGetClauses("p(x)", Set("p(x)"))
+
+      itShouldGetClauses("p(x) | q(x)", Set("p(x) | q(x)"))
+
+      itShouldGetClauses("p(x) | !q(x) | r(x)", Set("p(x) | !q(x) | r(x)"))
+
+      itShouldGetClauses("p(x) & q(x) & r(x)", Set("p(x)", "q(x)", "r(x)"))
+
+      itShouldGetClauses("(p(x) | q(x)) & !p(x)", Set("p(x) | q(x)", "!p(x)"))
+
+      itShouldGetClauses("(p(x) | q(x)) & (p(x) | r(x))", Set("p(x) | q(x)", "p(x) | r(x)"))
+
+      // maybe this should return an empty set?
+      itShouldGetClauses("Ax(p(x) | q(x)) & !p(x)", Set("!p(x)"))
+    }
+
+
     describe("resolution") {
       
       describe("student questions") {
