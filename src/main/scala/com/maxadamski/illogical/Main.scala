@@ -49,6 +49,8 @@ exit
   val welcome = s"""
 ILLOGICAL v$version - interactive mode
 
+(try this first: 'analyze [Ax(man(x) -> mortal(x)) & man(@socrates)] -> mortal(@socrates)')
+
 (type 'help' to display the manual)
 """
 
@@ -79,11 +81,11 @@ ILLOGICAL v$version - interactive mode
           parseForm(form)
             .foreach { f =>
               println("forms:")
-              print("- regular:    "); printForm(f)
-              print("- simplified: "); printForm(f.simplifying)
-              print("- conjuntive: "); printForm(f.simplifying.cnf)
-              print("- prenex:     "); printForm(f.pnf)
-              print("- skolemized: "); printForm(Skolemizer.skolemized(f))
+              print("1 regular:    "); printForm(f)
+              print("2 simplified: "); printForm(f.simplifying)
+              print("3 prenex:     "); printForm(f.pnf)
+              print("4 conjuntive: "); printForm(f.simplifying.cnf)
+              print("5 skolemized: "); printForm(Skolemizer.skolemized(f))
               println()
               println("properties:")
               println("- model:      unknown")

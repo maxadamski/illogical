@@ -47,17 +47,29 @@ sealed abstract class Form extends Node with LogicLaws {
     suffix.wrapped(qus)
   }
 
-  def cnf: Form = this.pnf match {
+  def cnf: Form = {
+    var last = this.pnf
+    while (true) {
+      val simpler = last._cnf
+      if (last == simpler) 
+        return simpler
+      else
+        last = simpler
+    }
+    last
+  }
+
+  def _cnf: Form = this match {
     case Op(p, OR, Op(q, AND, r)) => 
-      Op(Op(p.cnf, OR, q.cnf), AND, Op(p.cnf, OR, r.cnf))
+      Op(Op(p._cnf, OR, q._cnf), AND, Op(p._cnf, OR, r._cnf))
     case Op(Op(q, AND, r), OR, p) =>
-      Op(Op(p.cnf, OR, q.cnf), AND, Op(p.cnf, OR, r.cnf))
+      Op(Op(p._cnf, OR, q._cnf), AND, Op(p._cnf, OR, r._cnf))
     case Op(p, t, q) => 
-      Op(p.cnf, t, q.cnf)
+      Op(p._cnf, t, q._cnf)
     case Qu(token, v, p) =>
-      Qu(token, v, p.cnf)
+      Qu(token, v, p._cnf)
     case Not(p) =>
-      Not(p.cnf)
+      Not(p._cnf)
     case _ =>
       this
   }
