@@ -48,10 +48,18 @@ sealed abstract class Form extends Node with LogicLaws {
     case _ => false 
   }
 
+  def clauseLength: Int = literals.size
+
+  def literals: Set[Form] = this match {
+    case Op(a, _, b) if isClause => a.literals ++ b.literals
+    case _ if isLiteral => Set(this)
+    case _ => Set()
+  }
+
   def clauses: Set[Form] = this match {
     case _ if isClause => Set(this)
     case Op(p, _, q) => p.clauses ++ q.clauses
-    case Qu(_, _, p) => Set()
+    case Qu(_, _, p) => p.clauses
     case _ => Set()
   }
 

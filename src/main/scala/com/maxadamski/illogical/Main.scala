@@ -88,11 +88,9 @@ ILLOGICAL v$version - interactive mode
               print("5 skolemized: "); printForm(Skolemizer.skolemized(f))
               println()
               println("properties:")
-              println("- model:      unknown")
-              println("- satifiable: unknown")
-              println("- true:       unknown")
-              println("- consequent: unknown")
-              println("- equivalent: unknown")
+              println(s"- unsat:   ${Resolver.isUnsat(f)}")
+              println(s"- true:    ${Resolver.isTrue(f)}")
+              println(s"- model:   unknown")
             }
         case ("resolve", form) => 
           parseForm(form)

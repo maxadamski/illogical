@@ -175,6 +175,24 @@ class FormSpec extends UnitSpec {
       }
     }
 
+    def itShouldGetLiterals(form: String, expected: Set[String]) {
+      it(s"should get atoms '$form'") {
+        val f = Parser.parse(form)
+        val e = expected.map(Parser.parse)
+        e.foreach(lit => lit should not equal None)
+        f should not equal None
+        f.get.literals shouldEqual e.flatten
+      }
+    }
+
+    def itShouldGetClauseLength(form: String, expected: Int) {
+      it(s"should get clause length '$form'") {
+        val f = Parser.parse(form)
+        f should not equal None
+        f.get.clauseLength shouldEqual expected
+      }
+    }
+
     describe("extracting clauses") {
 
       itShouldGetClauses("p(x)", Set("p(x)"))
@@ -189,14 +207,53 @@ class FormSpec extends UnitSpec {
 
       itShouldGetClauses("(p(x) | q(x)) & (p(x) | r(x))", Set("p(x) | q(x)", "p(x) | r(x)"))
 
+      itShouldGetClauses("((!man(x) | mortal(x)) & man(@socrates)) & !mortal(@socrates)",
+        Set("!man(x) | mortal(x)", "man(@socrates)", "!mortal(@socrates)"))
+
+      itShouldGetLiterals("p(x)", Set("p(x)"))
+
+      itShouldGetLiterals("!p(x)", Set("!p(x)"))
+
+      itShouldGetLiterals("p(x) | q(x)", Set("p(x)", "q(x)"))
+
+      itShouldGetLiterals("p(x) | !q(x) | r(x)", Set("p(x)", "!q(x)", "r(x)"))
+
       // maybe this should return an empty set?
-      itShouldGetClauses("Ax(p(x) | q(x)) & !p(x)", Set("!p(x)"))
+      itShouldGetClauses("Ax(p(x) | q(x)) & !p(x)", Set("p(x) | q(x)", "!p(x)"))
+
+      itShouldGetClauseLength("p(x)", 1)
+
+      itShouldGetClauseLength("!p(x)", 1)
+
+      itShouldGetClauseLength("p(x) | q(x)", 2)
+
+      itShouldGetClauseLength("p(x) | q(x) | r(x)", 3)
+
+      itShouldGetClauseLength("p(x) & q(x)", 0)
     }
 
+    def itShouldTestForUnsat(form: String) {
+      it(s"should answer that '$form' is unsat") {
+        val f = Parser.parse(form)
+        f should not equal None
+        Resolver.isUnsat(f.get) shouldEqual true
+      }
+    }
+
+    def itShouldTestForTrue(form: String) {
+      it(s"should answer that '$form' is true") {
+        val f = Parser.parse(form)
+        f should not equal None
+        Resolver.isTrue(f.get) shouldEqual true
+      }
+    }
 
     describe("resolution") {
       
       describe("student questions") {
+
+        itShouldTestForTrue("[Ax(man(x) -> mortal(x)) & man(@socrates)] -> mortal(@socrates)")
+        itShouldTestForTrue("[Ax(man(x) -> mortal(x)) & man(@socrates)] -> !mortal(@socrates)")
 
       }
 
