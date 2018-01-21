@@ -9,36 +9,71 @@ object Resolver {
     _isUnsat(Skolemizer.skolemized(form).clauses)
   }
 
+  def setRep[T](s: Set[T]): String = {
+    s.toString
+  }
+
+  implicit class PrettySet[T](val set: Set[T]) {
+    override def toString =
+      "{" + set.mkString(", ") + "}"
+
+  }
+
+  def printSet[T](s: Set[T]): Unit =
+    println(setRep(s))
+
+  def listRep[T](l: List[T]): String = {
+    "[" + l.mkString(", ") + "]"
+  }
+
+  def mgusRep[T](t: List[Set[T]]): String = {
+    "[" + t.map(setRep).mkString(", ") + "]"
+  }
+
+  case class Clause(lits: Set[Form], comps: List[Set[Form]], mgus: List[Set[Sub]]) {
+    override def toString = {
+      s"""
+      ${setRep(lits)}
+      - comp: ${mgusRep(comps)}
+      - mgus: ${mgusRep(mgus)}
+      """
+    }
+  }
+
   def _isUnsat(clauses: Set[Form]): Boolean = {
     require(clauses.forall(_.isClause))
-    var clauseSet: Set[Set[Form]] = clauses.map(_.literals)
+    var clauseSet: Set[Clause] = clauses.map(c => Clause(c.literals, List(), List()))
 
-    println("start")
+    println("\nstart")
 
     val max = 10
     var i = 0
     while (i < max) {
-      clauseSet.foreach { set => println(set) }
+      println("\nall clauses:")
+      //clauseSet.foreach(println)
 
-      if (clauseSet.contains(Set())) {
-        println("end")
+      if (clauseSet.exists({ case Clause(s, _, _) if s.isEmpty => true; case _ => false })) {
+        //println("end")
+        println(clauseSet.collectFirst({ case c @ Clause(s, _, _) if s.isEmpty => c }))
         return true
       }
 
-      val newClauses: Set[Set[Form]] = clauseSet.subsets(2).map({subset => 
+      val newClauses: Set[Clause] = clauseSet.subsets(2).map({subset => 
         subset.toList match { case List(a, b) =>
-          val mgu = Unifier.mgu(a, b)
-          if (mgu != None && compliment(a ++ b)) {
-            val x = (a ++ b).map(lit => lit.substituting(mgu.get))
-            Some(removingCompliment(x))
+          val mgu = Unifier.mgu(a.lits, b.lits)
+          if (mgu != None && compliment(a.lits ++ b.lits)) {
+            val x = (a.lits ++ b.lits).map(lit => lit.substituting(mgu.get))
+            Some(Clause(removingCompliment(x), a.comps ++ b.comps ++ List(a.lits, b.lits), a.mgus ++ b.mgus :+ mgu.get))
           } else {
             None
           }
         }
       }).toSet.flatten
 
+      //println("\nnew clauses:")
+      //(newClauses -- clauseSet).foreach(println)
       if ((newClauses -- clauseSet).isEmpty) {
-        println("no new clauses")
+        //println("- no new clauses")
         return false
       }
 

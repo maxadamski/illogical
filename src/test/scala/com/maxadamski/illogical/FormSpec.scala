@@ -254,6 +254,14 @@ class FormSpec extends UnitSpec {
 
         itShouldTestForTrue("[Ax(man(x) -> mortal(x)) & man(@socrates)] -> mortal(@socrates)")
         itShouldTestForTrue("[Ax(man(x) -> mortal(x)) & man(@socrates)] -> !mortal(@socrates)")
+        itShouldTestForUnsat(
+          "[!p(x) | q(x) | r(x,f(x))] & "+
+          "[!p(x) | q(x) | s(f(x))] & "+
+          "t(@a) & "+
+          "p(@a) & "+
+          "[!r(@a,y) | t(y)] & "+
+          "[!t(x) | !q(x)] & "+
+          "[!t(x) | !s(x)]")
 
       }
 
